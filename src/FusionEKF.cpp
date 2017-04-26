@@ -67,8 +67,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   	//state covariance matrix P
   	ekf_.P_ = MatrixXd(4, 4);
-  	ekf_.P_ << 0.5, 0, 0, 0,
-          		0, 0.5, 0, 0,
+  	ekf_.P_ << 1, 0, 0, 0,
+          		0, 1, 0, 0,
           		0, 0, 1000, 0,
           		0, 0, 0, 1000;
 
@@ -90,16 +90,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-      double rho = measurement_pack.raw_measurements_[0];
-	  double phi = measurement_pack.raw_measurements_[1];
-	  double rhodot = measurement_pack.raw_measurements_[2];
+      float rho = (float)measurement_pack.raw_measurements_[0];
+	  float phi = (float)measurement_pack.raw_measurements_[1];
+	  float rhodot = (float)measurement_pack.raw_measurements_[2];
 
 	  ekf_.zt_ = measurement_pack.raw_measurements_;
 
-	  double px = rho * cos(phi);
-	  double py = rho * sin(phi);
-	  double vx = rhodot * cos(phi);
-	  double vy = rhodot * sin(phi);
+	  float px = rho * cos(phi);
+	  float py = rho * sin(phi);
+	  float vx = rhodot * cos(phi);
+	  float vy = rhodot * sin(phi);
 
       ekf_.x_ << px, py, vx, vy;
     }
@@ -130,15 +130,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-  double dt =  (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+  float dt =  (float)(measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0f;
   previous_timestamp_ = measurement_pack.timestamp_;
 
   if (dt > 0.001) {
-    double dt_2 = dt * dt;
-    double dt_3 = dt_2 * dt;
-    double dt_4 = dt_3 * dt;
-    double noise_ax = 9;
-    double noise_ay = 9;
+    float dt_2 = dt * dt;
+    float dt_3 = dt_2 * dt;
+    float dt_4 = dt_3 * dt;
+    float noise_ax = 9.0f;
+    float noise_ay = 9.0f;
 
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;

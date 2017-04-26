@@ -5,7 +5,7 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using std::vector;
 
-const double EPS = 0.00001;
+const double EPS = 0.001;
 
 Tools::Tools() {}
 
@@ -60,7 +60,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	//check division by zero
 	if (std::abs(c1) < EPS){
 		std::cout << "CalculateJacobian () - Error - Division by Zero" << std::endl;
-		return Hj.setZero();
+		return Hj;
 	}
 
 	double c2 = std::sqrt(c1);
