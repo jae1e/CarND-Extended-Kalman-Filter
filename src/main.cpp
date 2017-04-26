@@ -37,7 +37,8 @@ void check_arguments(int argc, char* argv[]) {
 }
 
 void check_files(ifstream& in_file, string& in_name,
-                 ofstream& out_file, string& out_name) {
+                 ofstream& out_file, string& out_name,
+                 ofstream& rmse_file, string& rmse_name) {
   if (!in_file.is_open()) {
     cerr << "Cannot open input file: " << in_name << endl;
     exit(EXIT_FAILURE);
@@ -45,6 +46,11 @@ void check_files(ifstream& in_file, string& in_name,
 
   if (!out_file.is_open()) {
     cerr << "Cannot open output file: " << out_name << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (!rmse_file.is_open()) {
+    cerr << "Cannot open output file: " << rmse_name << endl;
     exit(EXIT_FAILURE);
   }
 }
@@ -59,7 +65,10 @@ int main(int argc, char* argv[]) {
   string out_file_name_ = argv[2];
   ofstream out_file_(out_file_name_.c_str(), ofstream::out);
 
-  check_files(in_file_, in_file_name_, out_file_, out_file_name_);
+  string rmse_file_name_ = "data_rmse.txt";
+  ofstream rmse_file_(rmse_file_name_.c_str(), ofstream::out);
+
+  check_files(in_file_, in_file_name_, out_file_, out_file_name_, rmse_file_, rmse_file_name_);
 
   vector<MeasurementPackage> measurement_pack_list;
   vector<GroundTruthPackage> gt_pack_list;
@@ -165,13 +174,40 @@ int main(int argc, char* argv[]) {
 
     estimations.push_back(fusionEKF.ekf_.x_);
     ground_truth.push_back(gt_pack_list[k].gt_values_);
+
+	for (int i = 0; i < fusionEKF.ekf_.z_.size(); i++)
+	{
+		rmse_file_ << fusionEKF.ekf_.z_[i] << "\t";
+	}
+
+	rmse_file_ << "truth" << "\t";
+
+	for (int i = 0; i < fusionEKF.ekf_.zt_.size(); i++)
+	{
+		rmse_file_ << fusionEKF.ekf_.zt_[i] << "\t";
+	}
+
+	rmse_file_ << "rmse" << "\t";
+
+	// compute the accuracy (RMSE)
+	Tools tools;
+	VectorXd rmse = tools.CalculateRMSE(estimations, ground_truth);
+	rmse_file_ << rmse[0] << "\t";
+	rmse_file_ << rmse[1] << "\t";
+	rmse_file_ << rmse[2] << "\t";
+	rmse_file_ << rmse[3] << "\n";
   }
 
   // compute the accuracy (RMSE)
   Tools tools;
-  cout << "Accuracy - RMSE:" << endl << tools.CalculateRMSE(estimations, ground_truth) << endl;
+  VectorXd rmse = tools.CalculateRMSE(estimations, ground_truth);
+  cout << "Accuracy - RMSE:" << endl << rmse << endl;
 
   // close files
+  if (rmse_file_.is_open()) {
+    rmse_file_.close();
+  }
+
   if (out_file_.is_open()) {
     out_file_.close();
   }

@@ -23,6 +23,12 @@ public:
   // measurement covariance matrix
   Eigen::MatrixXd R_;
 
+  // z vector for debugging
+  Eigen::VectorXd z_;
+
+  // z ground truth vector for debugging
+  Eigen::VectorXd zt_;
+
   /**
    * Constructor
    */
