@@ -42,6 +42,9 @@ FusionEKF::FusionEKF() {
   Hj_ << 0, 0, 0, 0,
 	  0, 0, 0, 0,
 	  0, 0, 0, 0;
+
+  noise_ax_ = 9.0f;
+  noise_ay_ = 9.0f;
 }
 
 /**
@@ -133,23 +136,19 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float dt =  (float)(measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0f;
   previous_timestamp_ = measurement_pack.timestamp_;
 
-  if (dt > 0.001) {
-    float dt_2 = dt * dt;
-    float dt_3 = dt_2 * dt;
-    float dt_4 = dt_3 * dt;
-    float noise_ax = 9.0f;
-    float noise_ay = 9.0f;
+  float dt_2 = dt * dt;
+  float dt_3 = dt_2 * dt;
+  float dt_4 = dt_3 * dt;
 
-    ekf_.F_(0, 2) = dt;
-    ekf_.F_(1, 3) = dt;
+  ekf_.F_(0, 2) = dt;
+  ekf_.F_(1, 3) = dt;
 
-    ekf_.Q_ << dt_4 / 4 * noise_ax, 0, dt_3 / 2 * noise_ax, 0,
-      0, dt_4 / 4 * noise_ay, 0, dt_3 / 2 * noise_ay,
-      dt_3 / 2 * noise_ax, 0, dt_2 * noise_ax, 0,
-      0, dt_3 / 2 * noise_ay, 0, dt_2 * noise_ay;
+  ekf_.Q_ << dt_4 / 4 * noise_ax_, 0, dt_3 / 2 * noise_ax_, 0,
+	  0, dt_4 / 4 * noise_ay_, 0, dt_3 / 2 * noise_ay_,
+	  dt_3 / 2 * noise_ax_, 0, dt_2 * noise_ax_, 0,
+	  0, dt_3 / 2 * noise_ay_, 0, dt_2 * noise_ay_;
 
-    ekf_.Predict();
-  }
+  ekf_.Predict();
 
   /*****************************************************************************
    *  Update

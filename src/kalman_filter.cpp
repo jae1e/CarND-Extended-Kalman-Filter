@@ -39,9 +39,9 @@ void KalmanFilter::Update(const VectorXd &z) {
   // calculate matrices
   VectorXd y = z - z_pred;
   MatrixXd Ht = H_.transpose();
-  MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
+  MatrixXd S = H_ * PHt + R_;
+  MatrixXd Si = S.inverse();
   MatrixXd K = PHt * Si;
 
   // new estimate
@@ -49,6 +49,19 @@ void KalmanFilter::Update(const VectorXd &z) {
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
+}
+
+double normalizeAngle_(double angle) {
+  if (angle > M_PI) {
+    while (angle < M_PI) {
+      angle -= 2.0 * M_PI;
+    }
+  } else if (angle < -M_PI) {
+    while (angle > -M_PI) {
+      angle += 2.0 * M_PI;
+    }
+  }
+  return angle;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -59,20 +72,25 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   VectorXd z_pred(3);
   double rho_pred = std::sqrt(x_[0] * x_[0] + x_[1] * x_[1]);
-  if (rho_pred > EPS) {
-	double phi_pred = std::atan2(x_[1], x_[0]);
-	double rhodot_pred = (x_[0] * x_[2] + x_[1] * x_[3]) / (rho_pred < EPS ? EPS : rho_pred);
-	z_pred << rho_pred, phi_pred, rhodot_pred;
-  } 
-  else {
-	z_pred = H_ * x_;
+  double phi_pred = 0.0;
+  if (rho_pred < EPS) {
+	  rho_pred = EPS;
+  } else {
+	  phi_pred = std::atan2(x_[1], x_[0]);
   }
+  phi_pred = normalizeAngle_(phi_pred);
+  double rhodot_pred = (x_[0] * x_[2] + x_[1] * x_[3]) / rho_pred;
+  z_pred << rho_pred, phi_pred, rhodot_pred;
 
   // debugging
   z_ = z_pred;
   
   // calculate matrices
   VectorXd y = z - z_pred;
+
+  // normalise the angle value of y
+  y[1] = normalizeAngle_(y[1]);
+
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();

@@ -60,6 +60,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	//check division by zero
 	if (std::abs(c1) < EPS){
 		std::cout << "CalculateJacobian () - Error - Division by Zero" << std::endl;
+		Hj.fill(0.0);
 		return Hj;
 	}
 
